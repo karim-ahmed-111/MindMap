@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Mind_Map.DTOs;
 using Mind_Map.Models;
 using MindMap.DTOs;
 using MindMap.Models;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 namespace MindMap.Controllers
 {
     [ApiController]
-    [Route("api/{userId?}/[controller]")]
+    [Route("api/[controller]")]
     public class AssessmentController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -57,19 +58,7 @@ namespace MindMap.Controllers
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
-            if (user == null)
-            {
-                user = new User
-                {
-                    Name = request.user.Name,
-                    Age = request.user.Age,
-                    Email = request.user.Email,
-                    PasswordHash = request.user.PasswordHash,
-                    Gender = request.user.Gender,
-                };
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-            }
+
 
             var assessment = new Assessment
             {
@@ -109,19 +98,15 @@ namespace MindMap.Controllers
             _context.Assessments.Add(assessment);
             await _context.SaveChangesAsync();
 
-            return Ok(new AssessmentDto
+            return Ok(new AssessmentResponseDto
             {
-                AssessmentId = assessment.Id,
-                UserName = request.user.Name,
-                UserAge = request.user.Age,
-                DateTaken = assessment.DateTaken,
+
                 DomainName = domain.Name,
                 Level = domain.Level,
                 Score = domainScore.Score,
                 PotentialDisorder = domain.PotentialDisorder,
                 Recommendation = domainScore.NeedsFurtherInquiry ? domain.Recommendation : "No significant symptoms detected.",
-                RecommendedLevel2DomainId = recommendedLevel2DomainId,
-                RecommendedLevel2DomainName = recommendedLevel2DomainName
+
             });
         }
 
@@ -170,19 +155,7 @@ namespace MindMap.Controllers
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
-            if (user == null)
-            {
-                user = new User
-                {
-                    Name = request.user.Name,
-                    Age = request.user.Age,
-                    Email = request.user.Email,
-                    PasswordHash = request.user.PasswordHash,
-                    Gender = request.user.Gender,
-                };
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-            }
+
 
             var assessment = new Assessment
             {
@@ -204,12 +177,9 @@ namespace MindMap.Controllers
             // Generate detailed result description for Level 2
             string resultDescription = GenerateResultDescription(domain, domainScore);
 
-            return Ok(new AssessmentDto
+            return Ok(new AssessmentResponseDto
             {
-                AssessmentId = assessment.Id,
-                UserName = request.user.Name,
-                UserAge = request.user.Age,
-                DateTaken = assessment.DateTaken,
+
                 DomainName = domain.Name,
                 Level = domain.Level,
                 Score = domainScore.Score,
@@ -272,19 +242,15 @@ namespace MindMap.Controllers
             (int? recommendedLevel2DomainId, string? recommendedLevel2DomainName) = await GetRecommendedLevel2Domain(assessment.Domain, domainScore);
             string? resultDescription = assessment.Domain.Level == "Level 2" ? GenerateResultDescription(assessment.Domain, domainScore) : null;
 
-            return Ok(new AssessmentDto
+            return Ok(new AssessmentResponseDto
             {
-                AssessmentId = assessment.Id,
-                UserName = assessment.User.Name,
-                UserAge = assessment.User.Age,
-                DateTaken = assessment.DateTaken,
+
                 DomainName = assessment.Domain.Name,
                 Level = assessment.Domain.Level,
                 Score = domainScore.Score,
                 PotentialDisorder = assessment.Domain.PotentialDisorder,
                 Recommendation = domainScore.NeedsFurtherInquiry ? assessment.Domain.Recommendation : "No significant symptoms detected.",
-                RecommendedLevel2DomainId = recommendedLevel2DomainId,
-                RecommendedLevel2DomainName = recommendedLevel2DomainName,
+
                 ResultDescription = resultDescription
             });
         }
